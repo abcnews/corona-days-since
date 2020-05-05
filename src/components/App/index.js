@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 import styles from "./styles.scss";
 import worm from "./worm.svg";
 import { csvParse } from "d3-dsv";
-import { parse, differenceInDays } from "date-fns";
+import { parse, format, differenceInDays } from "date-fns";
 const dataUrl =
   "https://covid-sheets-mirror.web.app/api?sheet=1nUUU5zPRPlhAXM_-8R7lsMnAkK4jaebvIL5agAaKoXk&range=Daily%20Count%20States!A:E";
+const metadataUrl =
+  "https://covid-sheets-mirror.web.app/api?sheet=1nUUU5zPRPlhAXM_-8R7lsMnAkK4jaebvIL5agAaKoXk&range=Metadata";
 
 const promiseChainSpy = d => {
   console.log(d);
@@ -13,14 +15,14 @@ const promiseChainSpy = d => {
 
 const today = new Date();
 
-export default props => {
+export const App = props => {
   const [data, setData] = useState(null);
+  const [lastUpdate, setLastUpdate] = useState(null);
 
   useEffect(() => {
     fetch(dataUrl)
       .then(res => res.text())
       .then(csvParse)
-      .then(promiseChainSpy)
       .then(raw =>
         raw.map(d => ({
           date: parse(d["Date announced"], "dd/MM/yyyy", new Date()),
@@ -43,49 +45,43 @@ export default props => {
         );
         return daysSince;
       })
-      .then(promiseChainSpy)
       .then(setData);
+  }, []);
+
+  useEffect(() => {
+    fetch(metadataUrl)
+      .then(res => res.text())
+      .then(csvParse)
+      .then(data =>
+        setLastUpdate(parse(data[1].Value, "dd/MM/yyyy HH:mm:ss", new Date()))
+      );
   }, []);
 
   return data ? (
     <div className={styles.root}>
-      <img className={styles.worm} src={worm} />
-      <h1>Days since the last reported case of COVID-19</h1>
+      <h3 className={styles.title}>
+        Days since the last reported case of COVID-19
+      </h3>
       <div
         style={{
           display: "flex",
+          justifyContent: "center",
           flexWrap: "wrap",
-          textAlign: "center",
-          marginBottom: "3rem"
+          textAlign: "center"
         }}
       >
         {data.map(({ days, jurisdiction }) => (
-          <div
-            key={jurisdiction}
-            style={{
-              padding: "1rem",
-              margin: "0.4rem",
-              width: "4rem",
-              background: "rgba(255,255,255,0.3)",
-              color: "#000"
-            }}
-          >
-            <h2
-              style={{
-                marginTop: 0,
-                marginBottom: "0.5rem",
-                paddingBottom: "0.5rem",
-                borderBottom: "1px solid #fff"
-              }}
-            >
-              {jurisdiction}
-            </h2>
-            <div style={{ fontSize: "3rem" }}>{days}</div>
+          <div key={jurisdiction} className={styles.state}>
+            <h4 className={styles.stateTitle}>{jurisdiction}</h4>
+            <div className={styles.stateCount}>{days}</div>
           </div>
         ))}
       </div>
+      {lastUpdate ? (
+        <p className={styles.lastUpdate}>
+          Last updated {format(lastUpdate, "H:mm a 'AEST on' EEEE, MMMM d")}
+        </p>
+      ) : null}
     </div>
-  ) : (
-    <div>"Loading"</div>
-  );
+  ) : null;
 };
