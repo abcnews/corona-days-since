@@ -1,29 +1,36 @@
-import React from 'react';
-import { render } from 'react-dom';
-import App from './components/App';
+// import "regenerator-runtime/runtime.js";
+// import "core-js/features/symbol";
+// import "core-js/features/symbol/iterator";
 
-const PROJECT_NAME = 'corona-days-since';
-const root = document.querySelector(`[data-${PROJECT_NAME}-root]`);
+import React from "react";
+import { render } from "react-dom";
+import * as a2o from "@abcnews/alternating-case-to-object";
+import { App } from "./components/App";
 
-function init() {
-  render(<App projectName={PROJECT_NAME} />, root);
-}
+const domready = fn => {
+  /in/.test(document.readyState) ? setTimeout(() => domready(fn), 9) : fn();
+};
 
-init();
+const renderEmbed = () =>
+  [
+    ...document.querySelectorAll(
+      `a[id^=dayssinceEMBED],a[name^=dayssinceEMBED]`
+    )
+  ].map(anchorEl => {
+    const props = a2o(
+      anchorEl.getAttribute("id") || anchorEl.getAttribute("name")
+    );
+    const mountEl = document.createElement("div");
 
-if (module.hot) {
-  module.hot.accept('./components/App', () => {
-    try {
-      init();
-    } catch (err) {
-      import('./components/ErrorBox').then(exports => {
-        const ErrorBox = exports.default;
-        render(<ErrorBox error={err} />, root);
-      });
-    }
+    // mountEl.className = "u-pull";
+
+    Object.keys(props).forEach(
+      propName => (mountEl.dataset[propName] = props[propName])
+    );
+    anchorEl.parentElement.insertBefore(mountEl, anchorEl);
+    anchorEl.parentElement.removeChild(anchorEl);
+
+    render(<App {...props} />, mountEl);
   });
-}
 
-if (process.env.NODE_ENV === 'development') {
-  console.debug(`[${PROJECT_NAME}] public path: ${__webpack_public_path__}`);
-}
+domready(renderEmbed);
