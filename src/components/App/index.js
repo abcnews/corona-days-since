@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import styles from "./styles.scss";
 import worm from "./worm.svg";
 import { csvParse } from "d3-dsv";
-import { parse, format, differenceInDays } from "date-fns";
+import { parse, format } from "date-fns";
+
 const dataUrl =
   "https://covid-sheets-mirror.web.app/api?sheet=1nUUU5zPRPlhAXM_-8R7lsMnAkK4jaebvIL5agAaKoXk&range=Daily%20Count%20States!A:E";
 const metadataUrl =
@@ -13,7 +14,11 @@ const promiseChainSpy = d => {
   return d;
 };
 
-const today = new Date();
+const descending = (accessor = d => d) => (a, b) =>
+  accessor(a) > accessor(b) ? -1 : accessor(b) > accessor(a) ? 1 : 0;
+
+const ascending = (accessor = d => d) => (a, b) =>
+  accessor(a) < accessor(b) ? -1 : accessor(b) < accessor(a) ? 1 : 0;
 
 export const App = props => {
   const [data, setData] = useState(null);
@@ -24,26 +29,38 @@ export const App = props => {
       .then(res => res.text())
       .then(csvParse)
       .then(raw =>
-        raw.map(d => ({
-          date: parse(d["Date announced"], "dd/MM/yyyy", new Date()),
-          added: d["New cases"] === "" ? null : +d["New cases"],
-          jurisdiction: d["State/territory"]
-        }))
+        raw
+          .map(d => ({
+            date: parse(d["Date announced"], "dd/MM/yyyy", new Date()),
+            added: d["New cases"] === "" ? null : +d["New cases"],
+            jurisdiction: d["State/territory"]
+          }))
+          .sort(descending(d => +d.date))
       )
       .then(raw =>
         raw.reduce((m, { jurisdiction, added, date }) => {
-          if (added === null || added === 0) return m;
-          if (+m.get(jurisdiction) > +date) return m;
-          m.set(jurisdiction, date);
+          const count = m.get(jurisdiction);
+
+          // If we've finished counting this jurisdiction just return it.
+          if (count && count.done) return m;
+
+          if (added === 0) {
+            m.set(jurisdiction, { val: count ? count.val + 1 : 1 });
+          }
+
+          if (added > 0) {
+            m.set(jurisdiction, { val: count ? count.val : 0, done: true });
+          }
+
           return m;
         }, new Map())
       )
       .then(map => {
         const daysSince = [];
-        map.forEach((date, jurisdiction) =>
-          daysSince.push({ days: differenceInDays(today, date), jurisdiction })
+        map.forEach((count, jurisdiction) =>
+          daysSince.push({ days: count.val, jurisdiction })
         );
-        return daysSince;
+        return daysSince.sort(ascending(d => d.days));
       })
       .then(setData);
   }, []);
@@ -52,9 +69,11 @@ export const App = props => {
     fetch(metadataUrl)
       .then(res => res.text())
       .then(csvParse)
-      .then(data =>
-        setLastUpdate(parse(data[1].Value, "dd/MM/yyyy HH:mm:ss", new Date()))
-      );
+      .then(data => {
+        return setLastUpdate(
+          parse(data[1].Value, "dd/MM/yyyy HH:mm:ss", new Date())
+        );
+      });
   }, []);
 
   return data ? (
