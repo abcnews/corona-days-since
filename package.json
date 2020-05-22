@@ -20,6 +20,7 @@
 	},
 	"dependencies": {
 		"@abcnews/alternating-case-to-object": "^2.0.0",
+		"@abcnews/story-lab-component-library": "^1.0.0-pre",
 		"d3-dsv": "^1.2.0",
 		"date-fns": "^2.13.0",
 		"react": "^16.13.1",
