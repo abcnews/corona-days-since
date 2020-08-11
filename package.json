@@ -15,15 +15,15 @@
 		"test": "aunty test"
 	},
 	"devDependencies": {
-		"@abcnews/aunty": "^10.9.1",
+		"@abcnews/aunty": "^10.10.0",
 		"react-test-renderer": "^16.13.1"
 	},
 	"dependencies": {
-		"@abcnews/alternating-case-to-object": "^2.0.0",
-		"@abcnews/mount-utils": "^1.0.0",
-		"@abcnews/story-lab-component-library": "^1.0.0-pre",
+		"@abcnews/alternating-case-to-object": "^2.0.1",
+		"@abcnews/mount-utils": "^2.0.0",
+		"@abcnews/story-lab-component-library": "^1.0.0",
 		"d3-dsv": "^1.2.0",
-		"date-fns": "^2.13.0",
+		"date-fns": "^2.15.0",
 		"react": "^16.13.1",
 		"react-dom": "^16.13.1"
 	}
