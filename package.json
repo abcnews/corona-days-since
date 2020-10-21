@@ -15,16 +15,16 @@
 		"test": "aunty test"
 	},
 	"devDependencies": {
-		"@abcnews/aunty": "^10.10.0",
-		"react-test-renderer": "^16.13.1"
+		"@abcnews/aunty": "^11.1.1",
+		"react-test-renderer": "^16.14.0"
 	},
 	"dependencies": {
 		"@abcnews/alternating-case-to-object": "^2.0.1",
 		"@abcnews/mount-utils": "^2.0.0",
 		"@abcnews/story-lab-component-library": "^1.0.0",
 		"d3-dsv": "^1.2.0",
-		"date-fns": "^2.15.0",
-		"react": "^16.13.1",
-		"react-dom": "^16.13.1"
+		"date-fns": "^2.16.1",
+		"react": "^16.14.0",
+		"react-dom": "^16.14.0"
 	}
 }
